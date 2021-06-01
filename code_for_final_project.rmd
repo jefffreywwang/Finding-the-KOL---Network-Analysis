@@ -1,0 +1,194 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+#Network Analysis
+
+Social Network data analysis is now increasingly popular. With the emergency and fast development of various social media platforms, human connectivity and interaction are reaching a new level. Among all human activity, how information is transmitted is most important for marketers to make decisions in product and company marketing. Thus, this study is a pilot study for the elementary information transmission process and how can that knowledge and network analysis be applied to offer more knowledge about human society and help companies find the KOL(key oponion leader) and apply various kinds of marketing strategies. 
+
+```{r}
+#reading package AND data
+library(igraph)
+library(igraphdata)
+library(tidygraph)
+library(ggraph)
+library(ggplot2)
+library(cowplot)
+```
+
+#Karate data
+
+This dataset captured 34 members (including 2 instructors) of a karate club in university and 78 weighted links between pairs of people who have interacted and the decisions of those members between two instructors in the karate club after the split of the club. All the students and the two instructors belonged to the same club managed by John A (anonym). Mr.Hi (anonym), who is one of the instructors, was trying to raise the salary which caused the following split after the experiment had started. During the salary negotiation between John and Mr. Hi, the students continued to connect with others and that could affect their decisions. (Zachary,1977)
+
+```{r}
+#import data from package
+data(karate)
+
+#split the data into two clubs
+classh<- c(1,2,3,4,5,6,7,8,11,12,13,14,17,18,20,22)
+other<-c(9,10,15,16,19,21,23:34)
+
+#calculate degree centrality
+deg<-degree(karate,mode = "all")
+
+vertex.connectivity(karate)
+vertex.connectivity(karate)
+
+bet<-betweenness(karate)
+
+close<-closeness(karate)
+```
+
+#Descriptive Statistics
+
+```{r}
+#Density plots of degree centrality
+gplot1<-ggplot(as.data.frame(deg),aes(x = deg))+
+  geom_histogram(aes(y =..density..),color = "black", fill = "white")+
+  geom_density(alpha = .2, fill = "#FF6666")
+gplot1
+
+#Density plots of degree centrality for each club
+gplot1.1<-ggplot(as.data.frame(deg[classh]),aes(x = deg[classh]))+
+  geom_histogram(aes(y =..density..),color = "black", fill = "white")+
+  geom_density(alpha = .2, fill = "#FF6666")
+
+gplot1.2<-ggplot(as.data.frame(deg[other]),aes(x = deg[other]))+
+  geom_histogram(aes(y =..density..),color = "black", fill = "white")+
+  geom_density(alpha = .2, fill = "#FF6666")
+plot_grid(gplot1.1,gplot1.2,labels = c("Mr.Hi","John A."))
+```
+
+The degree distribution is shown as above. Most students had four connections with each other, and only a few of them had many connections which makes sense because Mr. Hi, John, and member 33 had significantly more connections than other students. Also, those who chose to left the club with Mr. Hi had a higher degree of centrality while most students with John only have one link to others. One possible reason is Mr. Hi was leaving the original club and those who connected more strongly with other classmates have a strong incentive to stay with Mr. Hi.
+
+```{r}
+gplot2<-ggplot(as.data.frame(deg),aes(x = deg, color = ))+
+  geom_histogram(aes(y =..density..),color = "black", fill = "white")+
+  geom_density(alpha = .2, fill = "#FF6666")
+gplot2
+```
+
+#Network Analysis - Plot and Result
+
+Orange nodes represent the member who chose Mr. Hi, and the blue nodes are those who chose John after the split. The H node represented Mr. Hi, and the A node represented for John. A. The size of the nodes represents how many connections a node(student) has while the width of the line represents the weighted connection. Most students who choose Mr. Hi are more likely to have a link between Mr. Hi. And it is the same for those who chose John. Roughly, students chose those who had a stronger connection with them. 
+
+The second thing that can be observed from the plot is that there are small communities within each club after the split. Every student made their decisions, including those who had a weak connection with either instructor. Thus, peer influence could be the reason for their decision.
+ 
+Third thing is that can be observed from the plot is that some nodes have more and stronger connections than others, meaning that they would have different impacts on information concerning the decisions and the decision themselves than other members/ students of the clubs.
+
+In terms of the number of the link, a node has, for Mr. Hi, member number 2, 3,4, and 7 is important nodes for the network structure in the class, while member 24, 32, and 33 is important nodes for John.
+ 
+Member 17, 25, 26 did not connect to either the two instructors. Number 17 chose Mr. Hi and connected to member 6 and 7, who eventually also chose Mr. Hi. Member 25 and 26 were connected and respectively connected to member 32 and 28, and all the four members chose John in the end. On the other hand, member 9, 10 20, and 33 connected to both the instructors. Among the number 20 was the only one who did not stay with John.
+
+
+```{r}
+#Network structure -weighted
+par(mar = c(0,0,0,0))
+plot(karate,vertex.size = deg*1.5, edge.width = edge.betweenness(karate)/15, vertex.frame.color = NA,label.color = "black")
+```
+
+```{r}
+#Network structure -unweighted
+par(mar = c(0,0,0,0))
+plot(karate,vertex.size = deg*1.5, vertex.frame.color = NA,label.color = "black")
+```
+
+
+```{r}
+#Network structure -circle
+par(mar = c(0,0,0,0))
+plot(karate,layout = layout_in_circle(karate),vertex.size = 7.5,vertex.label.cex = 0.8,vertex.label.color = "black",vertex.frame.color = NA)
+```
+
+```{r}
+#Small community withing students and teachers in different group
+muweight<-mean(E(karate)$weight)
+medweight<-mean(E(karate)$weight)
+karate.small.u <- delete_edges(karate, E(karate)[weight<muweight])
+karate.small.d <- delete_edges(karate, E(karate)[weight<medweight])
+par(mar = c(0,0,0,0))
+plot(karate.small.u)
+plot(karate.small.d)
+```
+
+
+```{r}
+#Get the edge and vertex from the data
+E(karate)
+V(karate)
+```
+
+```{r}
+#Weighted and unweighted adjacency matrix
+a<-as_adjacency_matrix(karate)
+b<-as_adjacency_matrix(karate,attr = "weight")
+```
+
+```{r}
+a[c(1,34),]
+```
+
+
+```{r}
+#Heat map for weighted edge 
+par(mar = c(0,0,0,0))
+heatmap(as.matrix(b),Colv = NA, Rowv = NA, scale="column")
+```
+
+
+```{r}
+#Get edges for vertexes
+cc<-as_data_frame(karate,what = "edges")
+d<-as_data_frame(karate,what = "vertices")
+write.csv(as.data.frame(cc),"C:/Users/User/Desktop/bb.csv",sep =",",row.names = T)
+```
+
+```{r}
+hub_score(karate, weights=NA)$vector
+```
+
+```{r}
+#Calculate distance
+as.data.frame(distances(karate)[,c(1,34)])
+write.csv(as.data.frame(distances(karate)[,c(1,34)]),"C:/Users/User/Desktop/cc.csv",sep =",",row.names = T)
+```
+
+#Samll Clussters
+
+We have already known that the club was separating into two clubs after Mr. Hi was fired by John. But before the decision was ultimately made, those students still meet each other, and their relationship could have impacted their decisions.
+
+```{r}
+#Small cluster within each club
+clus <- cluster_edge_betweenness(karate)
+dendPlot(clus, mode="hclust")
+par(mar = c(0,0,0,0))
+plot(clus,karate)
+```
+
+In subgroup A(left orange one), John seems to be closest to student number 33 and every other student was connected to the two people. On the contrary, Mr. Hi was connected to a group of students.
+
+For cluster A, member 33 and John are the center, each member is connected to the center but there are not many links between students in cluster A. For cluster C (yellow) and D (dark blue), students in the two clusters had stronger connections within each other, and only one or two members are connected to member 33 or John. On the other hand, cluster E (right dark orange) has close connections within the members while the connection between Mr. Hi and the members are the main connections in cluster D.
+
+#Who is the KOL for each coach and what do we learn from the relationship between students.
+
+##Main hub
+As described above, some of the students did not connect to both instructors outside the class but they still were able to make decisions on instructors. In this case, all members had no directed link to the instructors to choose the same instructor as who they connected to, who could be the key opinion leader. One reason is that maybe they were only exposed to one available choice. Thus, one strategy for instructors that had been chosen could be increasing the connection to those students, since they are not connected to either. One way or another, those hubs are important for the coaches to attract possible students. 
+
+##Small clusters
+The network relationship between students and instructors and the small clusters the students belonged to perfectly reflect their choice. During the fight between Mr. Hi and John got stronger, students remained their relationship, and that could have an impact on whom they are close to and construct small communities withing the students. Small communities may shape an echo chamber within the communities and similar comments or information about an instructor would transmit within those communities. 
+
+Both clubs (after the split) need students to keep the clubs functioning well. Thus, identifying the community could be helpful. For example, Mr. Hi could recruit new students who are close to students with a strong connection with him, so could John. In Mr. Hi’s class, member 5 is very crucial because member 5 is an important node in his class and seems to have an influence on those who have no directed relationship with Mr.Hi, while in John’s class, number 25 could be the pivot node. However, John has directed links with most members of John’s class, the strategy for recruiting student would be different from Mr. Hi’s class. 
+
+Because Mr. Hi left with some of the students, how to make students staying in his class is urgent for John. From the network relationship in his class, member 33 is very valuable for his/her directed relationship with other students. There are several kinds of strategies for John to expand his club. For example, he could start some small trial classes with existing students. Through constructing a relationship between students, he could have more students. Or he could duplicate Mr. Hi’ s strategy, number 25 could be the key opinion leader. But different from Mr. Hi, John owned the club brand so some public comment-that could arouse great thing about the class from number 25- could be helpful. (suppose the reputation of the club was still positive during the fight with Mr. Hi.)
+
+##Influence from peers
+From the decision of number 2,3,9 20, 25, 26, and 32, we know that the distance between coaches and the students is not the most crucial factor for their decisions. This can be the evidence suggesting sharing experience from students in the club would help both clubs to attract new students. Also, it seems those members are really close to other members based on their connection between each other and the internal cohesion within one club is crucial for the clubs, especially for Mr. Hi’s. Hence, some events other than classes could be helpful by improving the internal cohesion and increase the incentives for students to stay in the club. 
+
+Note that the dataset only contains a club’s student network relationship, but the real relationship between the 34 people may also include non-club-members and reveals those relationships could be helpful for getting more knowledge about how information and the real member of each small community.    
+
+#Conclusion
+
+From the network structure, it is obvious that people stay together with those who are close to them. Also, in small clusters, there may be stronger inclusive cohesion between members in the same subgroup, this could be the result of sharing the same or similar information. Also, some of the students were able to make decisions on the two directors but they have no directed connection between the instructor. By analyzing the network structure, some students may be more influential than others as they are the bridge between the instructor and distant students. In terms of marketing strategies, I suggest asking member 5 writing some comments and invite his/her friends to join Mr. Hi’s club, while for John, I suggest he to build connections with possible students. But for further analysis, the relationship between club members and non-members is very important.
